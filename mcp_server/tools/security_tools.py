@@ -21,6 +21,7 @@ import config
 from mcp_server.client import BackendClient, BackendError
 from reporting import ContractError, build_report
 from reporting.build_pptx import NARRATIVE_LIMITS, NarrativeError
+from reporting.metrics import lower_first
 
 TOOL_NAMES = (
     "get_organization_summary",
@@ -72,7 +73,7 @@ def default_risk_text(risk: Dict[str, Any]) -> RiskText:
     reach = "reachable from the internet" if risk["exposure"] == "public" else "reachable internally"
     activity = " Suspicious access to it was detected." if risk["anomalous_access"] else ""
     findings = [e["ref"] for e in risk["evidence"] if e["source"] == "findings"]
-    remediation = f"Resolve finding {findings[0]}: {risk['title'][0].lower()}{risk['title'][1:]}."
+    remediation = f"Resolve finding {findings[0]}: {lower_first(risk['title'])}."
     if len(findings) > 1:
         remediation += f" Then address {', '.join(findings[1:])}."
     if risk["anomalous_access"]:

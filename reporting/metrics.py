@@ -16,6 +16,10 @@ SENSITIVE_TYPES = {"PII", "financial", "health"}
 # heatmap axis scale (1-5) and the 30/60/90-day roadmap windows.
 STRUCTURAL_NUMBERS = {"0", "1", "2", "3", "4", "5", "30", "31", "60", "61", "90"}
 
+# Per-risk fields written by the AI. They are shown on slides, so they are
+# checked like the narrative and never count as a source of allowed numbers.
+AI_TEXT_FIELDS = ("business_impact", "remediation")
+
 _NUMBER_RE = re.compile(r"\d+(?:,\d{3})*(?:\.\d+)?")
 
 
@@ -41,6 +45,15 @@ def format_score(value: float) -> str:
     return f"{value:g}"
 
 
+def lower_first(text: str) -> str:
+    """Lower-case the first letter for use mid-sentence, unless the first word
+    is an acronym or name such as 'RDS', 'S3' or 'IAM'."""
+    first = text.split(" ", 1)[0]
+    if len(first) > 1 and not first[1:].islower():
+        return text
+    return text[:1].lower() + text[1:]
+
+
 def window_label(window: str) -> str:
     start, end = window.split("-")
     return f"{start}–{end} days"
@@ -64,6 +77,8 @@ def derive(data: dict) -> dict:
         "report_date": format_date(data["generated_at"]),
         "anomaly_times": [format_datetime(a["timestamp"]) for a in data["anomalies"]],
         "window_counts": windows,
+        "critical_zone_findings": sum(
+            c["count"] for c in data["risk_matrix"] if c["likelihood"] * c["impact"] >= 20),
         "exposed_records": sum(
             r["record_count"] or 0 for r in risks
             if r["exposure"] == "public" and r["data_sensitivity"] in SENSITIVE_TYPES),
@@ -91,6 +106,8 @@ def _walk(value, out: set[str]) -> None:
         out |= number_tokens(value)
     elif isinstance(value, dict):
         for k, v in value.items():
+            if k in AI_TEXT_FIELDS:
+                continue
             _walk(k, out)
             _walk(v, out)
     elif isinstance(value, (list, tuple)):
@@ -99,7 +116,8 @@ def _walk(value, out: set[str]) -> None:
 
 
 def allowed_numbers(data: dict) -> set[str]:
-    """Every number that may legitimately appear in the deck."""
+    """Every number that may legitimately appear in the deck. AI-written fields
+    (narrative and per-risk text) are excluded: they are checked, not trusted."""
     out: set[str] = set(STRUCTURAL_NUMBERS)
     _walk(data, out)
     _walk(derive(data), out)

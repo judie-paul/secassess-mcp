@@ -126,3 +126,22 @@ def test_fewer_than_three_risks_still_builds(data, tmp_path):
     data["top_risks"] = data["top_risks"][:1]
     prs = Presentation(build_report(data, None, out_dir=tmp_path))
     assert len(prs.slides) == 10
+
+
+def test_invented_number_in_ai_risk_text_is_rejected(data, tmp_path):
+    data["top_risks"][0]["business_impact"] = "About 97 servers could be compromised."
+    with pytest.raises(NarrativeError, match="R-001 business_impact"):
+        build_report(data, None, out_dir=tmp_path)
+
+
+def test_missing_risk_text_still_builds(data, tmp_path):
+    data["top_risks"][0]["business_impact"] = None
+    data["top_risks"][0]["remediation"] = None
+    assert build_report(data, None, out_dir=tmp_path)
+
+
+def test_acronyms_keep_their_case():
+    from reporting.metrics import lower_first
+    assert lower_first("RDS instance publicly accessible") == "RDS instance publicly accessible"
+    assert lower_first("S3 bucket allows public read") == "S3 bucket allows public read"
+    assert lower_first("Public storage bucket") == "public storage bucket"

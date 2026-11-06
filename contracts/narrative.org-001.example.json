@@ -1,0 +1,9 @@
+{
+  "executive_summary": "The most urgent risk is a customer database holding 1,284,000 records that is open to the internet, where a single session from Brazil read 48,500 records on 4 November. A storage bucket with customer data and a server with remote desktop open are also reachable from the internet.",
+  "key_messages": [
+    "Remove internet access to the customer database and review the Brazil session",
+    "Block public read access on the S3 bucket holding customer data",
+    "Close remote desktop to the internet and enforce MFA for administrators"
+  ],
+  "correlated_story": "Each signal alone could look routine. Together they show a regulated customer database open to the internet, the user's first sign-in from Brazil in 90 days, and one session reading far more records than normal. That combination is why this risk ranks first."
+}

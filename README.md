@@ -5,14 +5,15 @@ security data through an MCP server, investigates it with tools, answers
 questions with cited evidence, and generates an editable PowerPoint and PDF
 assessment report.
 
-> Ask *"What are our biggest data risks?"* and the agent finds that a public
-> storage bucket holding 48,200 customer records was accessed from a new
-> country, explains why that ranks first, and builds the deck.
+> Ask *"What are our biggest data risks?"* and the agent finds a customer
+> database holding 1,284,000 records that is open to the internet, where one
+> session from a new country read 48,500 records. It explains why that ranks
+> first, citing the evidence, and builds the deck.
 
 ![Sample assessment deck](examples/deck_preview.png)
 
-**Sample output:** [sample_report.pptx](examples/sample_report.pptx) · [sample_report.pdf](examples/sample_report.pdf)
-(All data is synthetic.)
+**Sample output:** [sample_report.pptx](examples/sample_report.pptx) · [sample_report.pdf](examples/sample_report.pdf),
+generated end to end from the backend for a fictional company. (All data is synthetic.)
 
 ## How it works
 
@@ -42,8 +43,9 @@ engineering problem, not a prompting problem:
 
 - **Numbers never pass through the model.** Every chart, table and figure in the deck
   is drawn from the backend's JSON. The AI supplies only three pieces of prose.
-- **The narrative is checked.** If the AI's text contains any number not found in the
-  data, the report builder rejects it with the offending number, and the agent retries.
+- **The AI's text is checked.** If the narrative or any per-risk explanation contains a
+  number not found in the data, the report builder rejects it, names the number, and the
+  agent retries.
 - **The data is checked.** Before building, a contract check confirms totals add up,
   every score equals its factor breakdown, and every factor matches the scoring model.
 - **Tests read the finished deck back.** They open the `.pptx` and confirm every number
@@ -63,7 +65,7 @@ Correlated risk story · 30/60/90-day remediation roadmap · Methodology
 |---|---|---|
 | Claude (Desktop / Code) | Local MCP server over stdio | `skills/claude/SKILL.md` |
 | OpenAI Codex | Same MCP server, via `~/.codex/config.toml` | `skills/codex/AGENTS.md` |
-| ChatGPT custom GPT | REST API actions (remote deployment) | `skills/gpt/instructions.md`, `skills/gpt/openapi.yaml` |
+| ChatGPT | Remote MCP server (full workflow), or custom GPT actions (data only) | `skills/gpt/instructions.md`, `skills/gpt/openapi.yaml` |
 
 All three follow the same investigation workflow and evidence rules.
 

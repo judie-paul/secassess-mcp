@@ -11,6 +11,7 @@ from pptx.chart.data import CategoryChartData
 from pptx.enum.chart import XL_CHART_TYPE, XL_LABEL_POSITION
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
+from pptx.oxml.ns import qn
 from pptx.util import Inches, Pt
 
 from .template.theme import BODY_FONT, COLORS, SEVERITY, SEVERITY_SOFT, add_box, add_text, rgb
@@ -48,6 +49,10 @@ def _quiet_chart(chart, horizontal: bool):
     dl.number_format = "0"
     dl.number_format_is_linked = False
     dl.position = XL_LABEL_POSITION.OUTSIDE_END
+    # Keep long figures such as 1,284,000 on one line.
+    body_pr = dl._element.get_or_add_txPr().find(qn("a:bodyPr"))
+    if body_pr is not None:
+        body_pr.set("wrap", "none")
     return plot
 
 
@@ -96,6 +101,9 @@ def records_chart(slide, risks: list[dict], x, y, w, h):
     gf.name = "chart_records"
     plot = _quiet_chart(gf.chart, horizontal=True)
     plot.data_labels.number_format = "#,##0"
+    # Leave room past the longest bar so its label never wraps.
+    gf.chart.value_axis.maximum_scale = max(r["record_count"] for r in rows) * 1.3
+    gf.chart.value_axis.minimum_scale = 0
     for i, r in enumerate(rows):
         pt = plot.series[0].points[i]
         pt.format.fill.solid()

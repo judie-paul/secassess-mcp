@@ -27,8 +27,8 @@ from . import charts
 from .contract import validate_contract
 from .export_pdf import export_pdf
 from .metrics import (
-    SENSITIVE_TYPES, allowed_numbers, derive, format_date, format_datetime, format_int,
-    format_score, parse_time, unknown_numbers, window_label,
+    AI_TEXT_FIELDS, SENSITIVE_TYPES, allowed_numbers, derive, format_date, format_datetime,
+    format_int, format_score, lower_first, parse_time, unknown_numbers, window_label,
 )
 from .template.theme import (
     COLORS, CONTENT_W, HEAD_FONT, MARGIN, SEVERITY, SEVERITY_SOFT, SLIDE_H, SLIDE_W,
@@ -53,13 +53,40 @@ def default_narrative(data: dict, m: dict) -> dict:
         f"This assessment covers {s['total_findings']} findings across {s['total_assets']} assets. "
         f"{m['critical_high']} are critical or high severity, {s['sensitive_assets_exposed']} of "
         f"{s['sensitive_assets']} sensitive data stores are exposed, and {s['anomalies_detected']} "
-        f"suspicious access events were detected. The highest risk is: {top['title'].lower()}."
+        f"suspicious access events were detected. The highest risk is: {lower_first(top['title'])}."
     )
-    keys = [f"Resolve {r['risk_id']}: {r['title'][0].lower() + r['title'][1:]}"
+    keys = [_fit(f"Resolve {r['risk_id']}: {lower_first(r['title'])}", NARRATIVE_LIMITS["key_messages"])
             for r in data["top_risks"][:3]]
     story_risk = _story_risk(data)
-    story = " ".join(e["detail"].rstrip(".") + "." for e in story_risk["evidence"])
+    # One signal per source, in the order the correlation slide shows them.
+    story = ""
+    for source in ("findings", "data_inventory", "auth_logs"):
+        ev = next((e for e in story_risk["evidence"] if e["source"] == source), None)
+        if ev:
+            sentence = ev["detail"].rstrip(".") + "."
+            if len(story) + len(sentence) + 1 > NARRATIVE_LIMITS["correlated_story"]:
+                break
+            story = f"{story} {sentence}".strip()
     return {"executive_summary": summary, "key_messages": keys, "correlated_story": story}
+
+
+def _fit(text: str, limit: int) -> str:
+    return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+
+def check_risk_text(data: dict, strict_numbers: bool = True) -> None:
+    """AI-written business_impact / remediation must not contain invented numbers."""
+    if not strict_numbers:
+        return
+    allowed = allowed_numbers(data)
+    problems = []
+    for r in data["top_risks"]:
+        for field in AI_TEXT_FIELDS:
+            bad = unknown_numbers(r.get(field) or "", allowed)
+            if bad:
+                problems.append(f"{r['risk_id']} {field} contains numbers not found in the data: {sorted(bad)}")
+    if problems:
+        raise NarrativeError("Risk text rejected:\n- " + "\n- ".join(problems))
 
 
 def check_narrative(narrative: dict, data: dict, strict_numbers: bool = True) -> None:
@@ -181,7 +208,9 @@ def slide_posture(prs, data, m):
 
 def slide_heatmap(prs, data, m):
     s = _new_slide(prs)
-    add_title(s, "Most findings are low risk; a few need action now", kicker="Risk heatmap")
+    n = m["critical_zone_findings"]
+    add_title(s, f"{n} finding{'s' if n != 1 else ''} sit{'' if n != 1 else 's'} in the critical zone",
+              kicker="Risk heatmap")
     charts.risk_heatmap(s, data, 1.45, 1.7)
     x = 7.3
     w = 13.333 - MARGIN - x
@@ -253,7 +282,11 @@ def slide_anomalies(prs, data, m):
     n = data["summary"]["anomalies_detected"]
     add_title(s, f"{n} suspicious access events were detected", kicker="Suspicious activity")
     risk_by_asset = {r["asset_id"]: r["risk_id"] for r in data["top_risks"]}
-    shown = data["anomalies"][:3]
+    rank_by_asset = {r["asset_id"]: r["rank"] for r in data["top_risks"]}
+    # Events linked to the highest-ranked risks first, then the most recent.
+    ordered = sorted(data["anomalies"], key=lambda a: parse_time(a["timestamp"]), reverse=True)
+    ordered.sort(key=lambda a: rank_by_asset.get(a["asset_id"], 99))
+    shown = ordered[:3]
     gap = 0.3
     w = (CONTENT_W - gap * 2) / 3
     for i, a in enumerate(shown):
@@ -276,7 +309,8 @@ def slide_anomalies(prs, data, m):
             add_pill(s, x + 0.3, y + 4.45, f"Linked to {risk_by_asset[a['asset_id']]}",
                      COLORS["accent"], size=11)
     if len(data["anomalies"]) > 3:
-        add_text(s, MARGIN, 6.72, 8, 0.25, f"{len(data['anomalies']) - 3} more events in the appendix data",
+        add_text(s, MARGIN, 6.72, 10, 0.25,
+                 f"Showing 3 of {len(data['anomalies'])} events: those linked to the highest-ranked risks first",
                  size=11, color=COLORS["muted"])
     _finish(s, data, 6, "Source: authentication logs, anomaly rules defined in the backend config.")
 
@@ -284,7 +318,7 @@ def slide_anomalies(prs, data, m):
 def slide_top_risk(prs, data, m, r, page):
     s = _new_slide(prs)
     sev = r["severity"]
-    add_title(s, r["title"], kicker=f"Top risk {r['rank']} of {m['detail_risks']}  ·  {r['service']}")
+    add_title(s, r["title"], kicker=f"Top risk {r['rank']} of {m['top_risk_count']}  ·  {r['service']}")
 
     # left: score card
     add_box(s, MARGIN, 1.75, 3.7, 4.95, fill=SEVERITY_SOFT[sev], radius=0.12)
@@ -327,10 +361,12 @@ def slide_top_risk(prs, data, m, r, page):
     w = 13.333 - MARGIN - x
     add_box(s, x, 1.75, w, 2.35, fill=COLORS["tint"], radius=0.12)
     add_text(s, x + 0.25, 1.95, w - 0.5, 0.35, "Business impact", size=15, bold=True, color=COLORS["ink"])
-    add_text(s, x + 0.25, 2.35, w - 0.5, 1.6, r["business_impact"], size=14, shrink=True)
+    add_text(s, x + 0.25, 2.35, w - 0.5, 1.6, r["business_impact"] or "Not yet described.", size=14,
+             shrink=True, color=None if r["business_impact"] else COLORS["muted"])
     add_box(s, x, 4.3, w, 2.4, fill=COLORS["accent_soft"], radius=0.12)
     add_text(s, x + 0.25, 4.5, w - 0.5, 0.35, "Recommended fix", size=15, bold=True, color=COLORS["ink"])
-    add_text(s, x + 0.25, 4.9, w - 0.5, 1.25, r["remediation"], size=14, shrink=True)
+    add_text(s, x + 0.25, 4.9, w - 0.5, 1.25, r["remediation"] or "Not yet described.", size=14,
+             shrink=True, color=None if r["remediation"] else COLORS["muted"])
     add_text(s, x + 0.25, 6.2, w - 0.5, 0.35, "Complete within " + window_label(r["remediation_window"]),
              size=13, bold=True, color=COLORS["accent"])
     refs = ", ".join(f"{e['source']}:{e['ref']}" for e in r["evidence"])
@@ -357,8 +393,9 @@ def slide_correlation(prs, data, m, narrative):
         add_text(s, x + 0.25, y + 0.85, card_w - 0.5, 0.4, heading, size=17, bold=True,
                  font=HEAD_FONT, color=COLORS["ink"])
         add_text(s, x + 0.25, y + 1.27, card_w - 0.5, 0.3,
-                 (SOURCE_LABELS[src] + ("  " + ev["ref"] if ev else "")).upper(),
-                 size=10, bold=True, color=COLORS["accent"])
+                 [[(SOURCE_LABELS[src].upper(), {"bold": True}),
+                   (("  " + ev["ref"]) if ev else "", {"color": COLORS["muted"]})]],
+                 size=10, color=COLORS["accent"])
         add_text(s, x + 0.25, y + 1.65, card_w - 0.5, 1.25,
                  ev["detail"] if ev else "No signal from this source", size=14,
                  color=COLORS["text"] if ev else COLORS["muted"], shrink=True)
@@ -412,8 +449,8 @@ def slide_roadmap(prs, data, m):
                      SEVERITY[r["severity"]], size=10)
             add_text(s, cx + 0.2, y + 0.5, cw - 0.4, 0.45, r["title"], size=13, bold=True,
                      shrink=True)
-            add_text(s, cx + 0.2, y + 0.95, cw - 0.4, 0.58, r["remediation"], size=11,
-                     color=COLORS["muted"], shrink=True)
+            add_text(s, cx + 0.2, y + 0.95, cw - 0.4, 0.58, r["remediation"] or "Not yet described.",
+                     size=11, color=COLORS["muted"], shrink=True)
         if len(risks) > 3:
             cx = area_x + 2 * (cw + 0.2)
             add_box(s, cx, y, cw, lane_h, fill=COLORS["tint"], radius=0.12)
@@ -446,29 +483,28 @@ def slide_methodology(prs, data, m):
     for row in tbl.rows:
         row.height = Inches(0.45)
     style_table(tbl, size=12)
-    add_text(s, MARGIN, 5.4, 6.0, 0.6, "Likelihood: " + model.get("likelihood_rule", ""), size=12,
+    add_text(s, MARGIN, 5.4, 6.0, 0.45, "Likelihood: " + model.get("likelihood_rule", ""), size=12,
              color=COLORS["muted"])
-    add_text(s, MARGIN, 5.95, 6.0, 0.6,
+    add_text(s, MARGIN, 5.85, 6.0, 0.45,
+             "Sources: configuration findings · data inventory · authentication logs", size=12,
+             color=COLORS["muted"])
+    add_text(s, MARGIN, 6.3, 6.0, 0.4,
              f"Scoring model version {model['version']}  ·  data generated {format_date(data['generated_at'])}",
              size=12, color=COLORS["muted"])
 
     x, w = 7.1, 13.333 - MARGIN - 7.1
-    add_text(s, x, 1.75, w, 0.35, "Data sources", size=15, bold=True, color=COLORS["ink"])
-    sources = [
-        ("Configuration findings", "Cloud resources checked against security best practice"),
-        ("Data inventory", "Which assets hold personal, financial or health data"),
-        ("Authentication logs", "Who signed in, from where and when"),
-    ]
-    for i, (a, b) in enumerate(sources):
-        y = 2.2 + i * 0.6
-        add_text(s, x, y, w, 0.55, [[(a, {"bold": True})], [(b, {"color": COLORS["muted"], "size": 12})]],
-                 size=13)
-    add_text(s, x, 4.15, w, 0.35, "Anomaly rules", size=15, bold=True, color=COLORS["ink"])
-    for i, t in enumerate(list(data["anomaly_types"].values())[:4]):
-        y = 4.6 + i * 0.68
-        add_text(s, x, y, w, 0.62, [[(t["label"], {"bold": True})],
-                                    [(t["description"], {"color": COLORS["muted"], "size": 12})]],
-                 size=13)
+    add_text(s, x, 1.75, w, 0.35, "Anomaly rules", size=15, bold=True, color=COLORS["ink"])
+    types = list(data["anomaly_types"].values())
+    shown = types[:6]
+    row_h = min(0.8, 4.6 / max(1, len(shown)))
+    for i, t in enumerate(shown):
+        y = 2.2 + i * row_h
+        add_text(s, x, y, w, row_h - 0.05, [[(t["label"], {"bold": True})],
+                                            [(t["description"], {"color": COLORS["muted"], "size": 12})]],
+                 size=13, shrink=True)
+    if len(types) > len(shown):
+        add_text(s, x, 6.5, w, 0.3, f"+{len(types) - len(shown)} more rules in the backend config",
+                 size=11, color=COLORS["muted"])
     _finish(s, data, 12)
 
 
@@ -481,6 +517,7 @@ def build_report(data: dict, narrative: dict | None = None, out_dir: str | Path 
     if fmt not in ("pptx", "pdf"):
         raise ValueError("fmt must be 'pptx' or 'pdf'")
     validate_contract(data)
+    check_risk_text(data, strict_numbers)
     m = derive(data)
     merged = default_narrative(data, m)
     if narrative:
