@@ -18,6 +18,8 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = Path(os.environ.get("SECURITY_DATA_DIR", BASE_DIR / "data"))
 REPORTS_DIR = Path(os.environ.get("SECURITY_REPORTS_DIR", DATA_DIR / "reports"))
+# Where the MCP generate_report tool writes PPTX/PDF decks (git-ignored).
+REPORT_OUTPUT_DIR = Path(os.environ.get("SECURITY_REPORT_OUTPUT_DIR", BASE_DIR / "output"))
 
 API_TITLE = "Security Assessment API"
 API_VERSION = "1.0.0"

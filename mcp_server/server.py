@@ -1,4 +1,4 @@
-"""MCP server exposing exactly seven security investigation tools.
+"""MCP server exposing seven security investigation tools plus generate_report.
 
 Run with:  python -m mcp_server.server                     (stdio, launched by an MCP client)
       or:  python -m mcp_server.server --transport http --port 8001
@@ -32,6 +32,11 @@ Workflow for an assessment:
 2. For each top risk: get_asset, list_findings, query_auth_logs (where relevant), detect_anomalies,
    get_data_inventory, and check every evidence reference the risk cites.
 3. Explain each risk, its business impact, and practical remediation.
+4. For a deck, call generate_report with risk_annotations (business_impact and remediation for each
+   top risk) and the narrative: executive_summary (under 480 characters), 1-3 key_messages (each
+   under 90 characters, starting with a verb) and correlated_story (under 330 characters, why the
+   top risk ranks first). Only use numbers you saw in tool results; the builder rejects any other
+   number and names it, so fix that number and call generate_report again. Give the user the path.
 
 Final report format (contracts/report_data.example.json). Output exactly one JSON object with these
 keys in this order, copying backend values verbatim:

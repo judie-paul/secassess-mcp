@@ -1,17 +1,26 @@
-"""The seven MCP tools. Each validates its arguments and calls one backend endpoint."""
+"""The eight MCP tools.
+
+Seven read-only investigation tools each validate their arguments and call one
+backend endpoint. `generate_report` sends the AI's per-risk text to the backend
+(which validates it and returns the contract JSON), then builds the PPTX/PDF
+deck with Part B's `reporting.build_report`. No tool reads data files directly.
+"""
 
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Annotated, Any, Dict, Literal, Optional
+from typing import Annotated, Any, Dict, List, Literal, Optional
 from urllib.parse import quote
 
+import anyio
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
-from pydantic import Field
+from pydantic import BaseModel, ConfigDict, Field
 
 import config
 from mcp_server.client import BackendClient, BackendError
+from reporting import ContractError, build_report
+from reporting.build_pptx import NARRATIVE_LIMITS, NarrativeError
 
 TOOL_NAMES = (
     "get_organization_summary",
@@ -21,6 +30,7 @@ TOOL_NAMES = (
     "top_risks",
     "get_data_inventory",
     "detect_anomalies",
+    "generate_report",
 )
 
 OrgId = Annotated[str, Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_-]+$", description="Organization ID, e.g. org-001")]
@@ -46,9 +56,40 @@ def _org(organization_id: str) -> str:
     return f"/organizations/{quote(organization_id, safe='')}"
 
 
+class RiskText(BaseModel):
+    """AI-written text for one top risk (numbers and windows come from the backend)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    risk_id: str = Field(pattern=r"^R-\d{3}$", description="Top-risk ID from top_risks, e.g. R-001")
+    business_impact: str = Field(min_length=1, max_length=400, description="Why this risk matters to the business")
+    remediation: str = Field(min_length=1, max_length=400, description="Practical fix, in plain language")
+
+
+def default_risk_text(risk: Dict[str, Any]) -> RiskText:
+    """Plain, data-only wording for a top risk the AI did not describe."""
+    records = f"{risk['record_count']:,} records of " if risk.get("record_count") is not None else ""
+    reach = "reachable from the internet" if risk["exposure"] == "public" else "reachable internally"
+    activity = " Suspicious access to it was detected." if risk["anomalous_access"] else ""
+    findings = [e["ref"] for e in risk["evidence"] if e["source"] == "findings"]
+    remediation = f"Resolve finding {findings[0]}: {risk['title'][0].lower()}{risk['title'][1:]}."
+    if len(findings) > 1:
+        remediation += f" Then address {', '.join(findings[1:])}."
+    if risk["anomalous_access"]:
+        remediation += " Review the flagged access."
+    return RiskText(
+        risk_id=risk["risk_id"],
+        business_impact=f"{risk['service']} asset {risk['asset_id']} holds {records}{risk['data_sensitivity']} "
+        f"data and is {reach}.{activity}",
+        remediation=remediation,
+    )
+
+
 def register_tools(server: MCPServer, client: BackendClient) -> None:
-    async def call(path: str, params: Optional[Dict[str, Any]] = None) -> Any:
+    async def call(path: str, params: Optional[Dict[str, Any]] = None, body: Any = None, method: str = "GET") -> Any:
         try:
+            if method == "POST":
+                return await client.post(path, body)
             return await client.get(path, params)
         except BackendError as exc:
             status = f"HTTP {exc.status_code} " if exc.status_code else ""
@@ -168,3 +209,76 @@ def register_tools(server: MCPServer, client: BackendClient) -> None:
                 "end_time": _iso(end_time),
             },
         )
+
+    @server.tool()
+    async def generate_report(
+        organization_id: OrgId,
+        format: Literal["pptx", "pdf"] = "pptx",
+        executive_summary: Annotated[
+            Optional[str],
+            Field(default=None, max_length=NARRATIVE_LIMITS["executive_summary"],
+                  description="Plain-language summary for a manager (2-3 key points)"),
+        ] = None,
+        key_messages: Annotated[
+            Optional[List[Annotated[str, Field(max_length=NARRATIVE_LIMITS["key_messages"])]]],
+            Field(default=None, min_length=1, max_length=3, description="1-3 short actions, each starting with a verb"),
+        ] = None,
+        correlated_story: Annotated[
+            Optional[str],
+            Field(default=None, max_length=NARRATIVE_LIMITS["correlated_story"],
+                  description="Why the top risk ranks first: how its signals connect"),
+        ] = None,
+        risk_annotations: Annotated[
+            Optional[List[RiskText]],
+            Field(default=None, description="business_impact and remediation for each top risk (by risk_id)"),
+        ] = None,
+        top_risks_limit: Annotated[
+            int, Field(ge=config.MIN_TOP_RISKS, le=config.MAX_TOP_RISKS, description="Number of top risks (5-7)")
+        ] = config.DEFAULT_TOP_RISKS,
+    ) -> Dict[str, Any]:
+        """Build the assessment deck (PPTX, or PDF via LibreOffice) and return the file path.
+
+        All charts, tables and figures come from the backend. You control only the narrative
+        (executive_summary, key_messages, correlated_story) and, per top risk, business_impact and
+        remediation. Any you leave out fall back to plain data-only wording. The builder rejects text
+        containing a number that is not in the data; if that happens, fix the number it names and retry."""
+        risks = (await call(f"{_org(organization_id)}/risks", {"limit": top_risks_limit}))["items"]
+        supplied = {a.risk_id: a for a in (risk_annotations or [])}
+        if len(supplied) != len(risk_annotations or []):
+            raise ToolError("risk_annotations contains the same risk_id more than once")
+        unknown = sorted(set(supplied) - {r["risk_id"] for r in risks})
+        if unknown:
+            raise ToolError(f"risk_annotations reference risks that are not in the top risks: {', '.join(unknown)}")
+        texts = [supplied.get(r["risk_id"]) or default_risk_text(r) for r in risks]
+        report = await call(
+            f"{_org(organization_id)}/assessments",
+            body={"top_risks_limit": top_risks_limit, "annotations": [t.model_dump() for t in texts]},
+            method="POST",
+        )
+        narrative = {
+            "executive_summary": executive_summary,
+            "key_messages": key_messages,
+            "correlated_story": correlated_story,
+        }
+        out_dir = config.REPORT_OUTPUT_DIR
+        filename = f"security_assessment_{organization_id}"
+        try:
+            path = await anyio.to_thread.run_sync(
+                lambda: build_report(report, narrative, out_dir=out_dir, fmt=format, filename=filename)
+            )
+        except NarrativeError as exc:
+            raise ToolError(f"{exc}\nFix the text and call generate_report again.") from exc
+        except ContractError as exc:
+            raise ToolError(f"Backend data failed the report contract check: {exc}") from exc
+        except (OSError, RuntimeError) as exc:
+            hint = " PDF export needs LibreOffice (set SOFFICE_CMD)." if format == "pdf" else ""
+            raise ToolError(f"Report build failed: {exc}.{hint}") from exc
+        return {
+            "path": str(path),
+            "format": format,
+            "organisation": report["organisation"],
+            "top_risks": [r["risk_id"] for r in report["top_risks"]],
+            "ai_risk_text": sorted(supplied),
+            "default_risk_text": sorted(r["risk_id"] for r in risks if r["risk_id"] not in supplied),
+            "narrative_fields_supplied": sorted(k for k, v in narrative.items() if v),
+        }

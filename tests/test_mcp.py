@@ -24,10 +24,10 @@ async def call(server, name, **arguments):
     return result.structured_content["result"]
 
 
-async def test_exactly_seven_tools(mcp):
+async def test_exactly_eight_tools(mcp):
     tools = await mcp.list_tools()
     assert sorted(t.name for t in tools) == sorted(TOOL_NAMES)
-    assert len(tools) == 7
+    assert len(tools) == 8
     assert all(t.description for t in tools)
 
 

@@ -71,3 +71,6 @@ class BackendClient:
 
     async def get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
         return await self.request("GET", path, params=params)
+
+    async def post(self, path: str, json: Any = None) -> Any:
+        return await self.request("POST", path, json=json)
