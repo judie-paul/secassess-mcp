@@ -1,0 +1,88 @@
+# DRAFT: paths must match the FastAPI routes in api/main.py (Part A).
+# Once the API is running, compare with the generated schema at /openapi.json
+# and keep the operationIds below, which the GPT instructions refer to.
+openapi: 3.1.0
+info:
+  title: secassess API
+  version: "1.0"
+  description: Read-only access to cloud security findings, data inventory and sign-in logs, plus report generation.
+servers:
+  - url: https://YOUR-DEPLOYMENT.example.com
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  schemas:
+    Narrative:
+      type: object
+      required: [format]
+      properties:
+        format: { type: string, enum: [pptx, pdf] }
+        executive_summary: { type: string, maxLength: 480 }
+        key_messages:
+          type: array
+          maxItems: 3
+          items: { type: string, maxLength: 90 }
+        correlated_story: { type: string, maxLength: 330 }
+security:
+  - apiKey: []
+paths:
+  /risks/top:
+    get:
+      operationId: getTopRisks
+      summary: Ranked, correlated risks with score breakdown and evidence
+      parameters:
+        - { name: n, in: query, schema: { type: integer, default: 5, minimum: 1, maximum: 20 } }
+      responses: { "200": { description: Ranked risks } }
+  /findings:
+    get:
+      operationId: listFindings
+      summary: Configuration findings, optionally filtered
+      parameters:
+        - { name: severity, in: query, schema: { type: string, enum: [critical, high, medium, low] } }
+        - { name: service, in: query, schema: { type: string }, description: "e.g. S3, IAM, RDS" }
+      responses: { "200": { description: Findings } }
+  /assets/{asset_id}:
+    get:
+      operationId: getAsset
+      summary: Everything known about one asset across all data sources
+      parameters:
+        - { name: asset_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Asset detail }
+        "404": { description: Unknown asset }
+  /inventory:
+    get:
+      operationId: getDataInventory
+      summary: Where sensitive data is stored
+      parameters:
+        - { name: sensitivity, in: query, schema: { type: string, enum: [PII, financial, health, internal, public] } }
+      responses: { "200": { description: Data inventory } }
+  /auth-logs:
+    get:
+      operationId: queryAuthLogs
+      summary: Sign-in activity
+      parameters:
+        - { name: user, in: query, schema: { type: string } }
+        - { name: country, in: query, schema: { type: string, description: ISO country code } }
+        - { name: since, in: query, schema: { type: string, format: date-time } }
+      responses: { "200": { description: Sign-in events } }
+  /anomalies:
+    get:
+      operationId: getAnomalies
+      summary: Suspicious sign-ins flagged by detection rules
+      responses: { "200": { description: Anomalies } }
+  /reports:
+    post:
+      operationId: generateReport
+      summary: Build the assessment deck (PPTX or PDF) and return a download link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Narrative" }
+      responses:
+        "200": { description: Download link for the generated report }
+        "422": { description: Narrative rejected (e.g. contains numbers not in the data) }

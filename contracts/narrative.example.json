@@ -1,0 +1,9 @@
+{
+  "executive_summary": "The account has a small number of serious, connected problems rather than widespread weakness. The most urgent is a public storage bucket holding 48,200 customer records that was accessed from a new country on 29 October. A payments database is also reachable from the internet, and the root account has no multi-factor authentication.",
+  "key_messages": [
+    "Close public access to customer and payment data first",
+    "Treat the 29 October access to customer exports as a possible incident",
+    "Secure the root account and restore audit logging in every region"
+  ],
+  "correlated_story": "No single signal here is unusual on its own. Together they show a public bucket, holding customer personal data, being accessed by a service account from a country it has never used. That combination is why this risk ranks first."
+}

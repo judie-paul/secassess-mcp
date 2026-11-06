@@ -1,0 +1,18 @@
+[project]
+name = "secassess-mcp"
+version = "0.1.0"
+description = "AI security assessment agent: MCP tools over cloud security data, plus PowerPoint/PDF reporting"
+requires-python = ">=3.11"
+# Part B (reporting). Part A adds its own (fastapi, uvicorn, mcp, pandas, httpx) here.
+dependencies = [
+    "python-pptx>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.setuptools]
+packages = ["reporting", "reporting.template"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

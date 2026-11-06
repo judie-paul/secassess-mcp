@@ -1,0 +1,323 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-11-06T18:00:00Z",
+  "organisation": "Acme Corp (sample data)",
+  "scoring_model": {
+    "version": "1.0",
+    "formula": "severity * exposure * data_sensitivity * activity",
+    "factors": {
+      "severity": {
+        "critical": 10,
+        "high": 7,
+        "medium": 4,
+        "low": 1
+      },
+      "exposure": {
+        "public": 2.0,
+        "internal": 1.0
+      },
+      "data_sensitivity": {
+        "PII": 2.0,
+        "financial": 2.0,
+        "health": 2.0,
+        "internal": 1.2,
+        "public": 1.0
+      },
+      "activity": {
+        "anomalous": 1.5,
+        "normal": 1.0
+      }
+    },
+    "likelihood_rule": "public = 4, internal = 2; +1 if anomalous access; max 5",
+    "remediation_windows": {
+      "critical": "0-30",
+      "high": "31-60",
+      "medium": "61-90",
+      "low": "61-90"
+    }
+  },
+  "anomaly_types": {
+    "new_country": {
+      "label": "Login from new country",
+      "description": "First login from this country for the user in the last 90 days"
+    },
+    "impossible_travel": {
+      "label": "Impossible travel",
+      "description": "Two logins too far apart to travel between in the time given (over 900 km/h)"
+    },
+    "off_hours_admin": {
+      "label": "Off-hours admin login",
+      "description": "Admin or root login outside 08:00-18:00 local time"
+    }
+  },
+  "summary": {
+    "total_assets": 20,
+    "total_findings": 40,
+    "by_severity": {
+      "critical": 4,
+      "high": 11,
+      "medium": 15,
+      "low": 10
+    },
+    "sensitive_assets": 8,
+    "sensitive_assets_exposed": 3,
+    "anomalies_detected": 3
+  },
+  "findings_by_service": {
+    "S3": 9,
+    "IAM": 8,
+    "EC2": 7,
+    "RDS": 6,
+    "KMS": 4,
+    "CloudTrail": 3,
+    "Lambda": 3
+  },
+  "risk_matrix": [
+    {
+      "likelihood": 5,
+      "impact": 5,
+      "count": 1
+    },
+    {
+      "likelihood": 4,
+      "impact": 5,
+      "count": 1
+    },
+    {
+      "likelihood": 3,
+      "impact": 4,
+      "count": 1
+    },
+    {
+      "likelihood": 2,
+      "impact": 4,
+      "count": 1
+    },
+    {
+      "likelihood": 3,
+      "impact": 3,
+      "count": 6
+    },
+    {
+      "likelihood": 2,
+      "impact": 3,
+      "count": 12
+    },
+    {
+      "likelihood": 1,
+      "impact": 2,
+      "count": 18
+    }
+  ],
+  "top_risks": [
+    {
+      "rank": 1,
+      "risk_id": "R-001",
+      "asset_id": "s3-cust-exports",
+      "service": "S3",
+      "title": "Public storage bucket holding customer personal data",
+      "severity": "critical",
+      "exposure": "public",
+      "data_sensitivity": "PII",
+      "record_count": 48200,
+      "anomalous_access": true,
+      "score": 60.0,
+      "score_breakdown": {
+        "severity": 10,
+        "exposure": 2.0,
+        "data_sensitivity": 2.0,
+        "activity": 1.5
+      },
+      "likelihood": 5,
+      "impact": 5,
+      "evidence": [
+        {
+          "source": "findings",
+          "ref": "F-012",
+          "detail": "Bucket policy allows public read"
+        },
+        {
+          "source": "data_inventory",
+          "ref": "s3-cust-exports",
+          "detail": "48,200 customer PII records"
+        },
+        {
+          "source": "auth_logs",
+          "ref": "A-0417",
+          "detail": "Access from new country (RU) on 2026-10-29"
+        }
+      ],
+      "business_impact": "Possible exposure of customer personal data, with regulatory and reputational consequences.",
+      "remediation": "Block public access, rotate access keys, review access logs since 2026-10-01.",
+      "remediation_window": "0-30"
+    },
+    {
+      "rank": 2,
+      "risk_id": "R-002",
+      "asset_id": "rds-payments-prod",
+      "service": "RDS",
+      "title": "Payments database reachable from the internet",
+      "severity": "critical",
+      "exposure": "public",
+      "data_sensitivity": "financial",
+      "record_count": 125000,
+      "anomalous_access": false,
+      "score": 40.0,
+      "score_breakdown": {
+        "severity": 10,
+        "exposure": 2.0,
+        "data_sensitivity": 2.0,
+        "activity": 1.0
+      },
+      "likelihood": 4,
+      "impact": 5,
+      "evidence": [
+        {
+          "source": "findings",
+          "ref": "F-021",
+          "detail": "Security group allows 0.0.0.0/0 on port 5432"
+        },
+        {
+          "source": "data_inventory",
+          "ref": "rds-payments-prod",
+          "detail": "125,000 payment records"
+        }
+      ],
+      "business_impact": "Financial records exposed to internet-wide attack attempts.",
+      "remediation": "Restrict inbound access to the application subnet and enable IAM database authentication.",
+      "remediation_window": "0-30"
+    },
+    {
+      "rank": 3,
+      "risk_id": "R-003",
+      "asset_id": "iam-root",
+      "service": "IAM",
+      "title": "Root account without multi-factor authentication",
+      "severity": "critical",
+      "exposure": "internal",
+      "data_sensitivity": "internal",
+      "record_count": null,
+      "anomalous_access": true,
+      "score": 18.0,
+      "score_breakdown": {
+        "severity": 10,
+        "exposure": 1.0,
+        "data_sensitivity": 1.2,
+        "activity": 1.5
+      },
+      "likelihood": 3,
+      "impact": 4,
+      "evidence": [
+        {
+          "source": "findings",
+          "ref": "F-003",
+          "detail": "MFA not enabled on root account"
+        },
+        {
+          "source": "auth_logs",
+          "ref": "A-0388",
+          "detail": "Root login at 03:12 local time"
+        }
+      ],
+      "business_impact": "A stolen password would give full control of the cloud account.",
+      "remediation": "Enable hardware MFA on root and stop using root for daily tasks.",
+      "remediation_window": "0-30"
+    },
+    {
+      "rank": 4,
+      "risk_id": "R-004",
+      "asset_id": "s3-hr-backups",
+      "service": "S3",
+      "title": "Unencrypted backups of the HR database",
+      "severity": "high",
+      "exposure": "internal",
+      "data_sensitivity": "PII",
+      "record_count": 3150,
+      "anomalous_access": false,
+      "score": 14.0,
+      "score_breakdown": {
+        "severity": 7,
+        "exposure": 1.0,
+        "data_sensitivity": 2.0,
+        "activity": 1.0
+      },
+      "likelihood": 2,
+      "impact": 4,
+      "evidence": [
+        {
+          "source": "findings",
+          "ref": "F-008",
+          "detail": "Default encryption not enabled on bucket"
+        },
+        {
+          "source": "data_inventory",
+          "ref": "s3-hr-backups",
+          "detail": "3,150 employee PII records"
+        }
+      ],
+      "business_impact": "Employee personal data readable by anyone with internal access to the bucket.",
+      "remediation": "Enable default encryption with a managed KMS key and re-encrypt existing objects.",
+      "remediation_window": "31-60"
+    },
+    {
+      "rank": 5,
+      "risk_id": "R-005",
+      "asset_id": "cloudtrail-eu-west-1",
+      "service": "CloudTrail",
+      "title": "Audit logging disabled in one region",
+      "severity": "medium",
+      "exposure": "internal",
+      "data_sensitivity": "internal",
+      "record_count": null,
+      "anomalous_access": false,
+      "score": 4.8,
+      "score_breakdown": {
+        "severity": 4,
+        "exposure": 1.0,
+        "data_sensitivity": 1.2,
+        "activity": 1.0
+      },
+      "likelihood": 2,
+      "impact": 3,
+      "evidence": [
+        {
+          "source": "findings",
+          "ref": "F-031",
+          "detail": "No active trail in eu-west-1"
+        }
+      ],
+      "business_impact": "Activity in this region cannot be investigated after an incident.",
+      "remediation": "Enable a multi-region trail with log file validation.",
+      "remediation_window": "61-90"
+    }
+  ],
+  "anomalies": [
+    {
+      "anomaly_id": "A-0417",
+      "type": "new_country",
+      "user": "svc-export",
+      "asset_id": "s3-cust-exports",
+      "country": "RU",
+      "timestamp": "2026-10-29T02:41:00Z",
+      "detail": "First login from this country in 90 days"
+    },
+    {
+      "anomaly_id": "A-0402",
+      "type": "impossible_travel",
+      "user": "j.mwangi",
+      "asset_id": "console",
+      "country": "BR",
+      "timestamp": "2026-10-27T09:15:00Z",
+      "detail": "Login from Nairobi and São Paulo 40 minutes apart"
+    },
+    {
+      "anomaly_id": "A-0388",
+      "type": "off_hours_admin",
+      "user": "root",
+      "asset_id": "iam-root",
+      "country": "KE",
+      "timestamp": "2026-10-25T00:12:00Z",
+      "detail": "Root login at 03:12 local time"
+    }
+  ]
+}
