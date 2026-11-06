@@ -1,0 +1,29 @@
+[
+  {
+    "organization_id": "org-001",
+    "name": "Savanna Ridge Financial Ltd",
+    "industry": "Financial services (digital lending)",
+    "headquarters": "Nairobi, Kenya",
+    "employee_count": 240,
+    "cloud_provider": "AWS",
+    "aws_account_ids": [
+      "111122223333",
+      "444455556666"
+    ],
+    "primary_region": "af-south-1",
+    "timezone": "Africa/Nairobi"
+  },
+  {
+    "organization_id": "org-002",
+    "name": "Kilima Highlands Coffee Cooperative",
+    "industry": "Agriculture (cooperative)",
+    "headquarters": "Nyeri, Kenya",
+    "employee_count": 18,
+    "cloud_provider": "AWS",
+    "aws_account_ids": [
+      "777788889999"
+    ],
+    "primary_region": "af-south-1",
+    "timezone": "Africa/Nairobi"
+  }
+]

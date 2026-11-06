@@ -1,0 +1,277 @@
+{
+  "description": "Snapshot of anomaly detection runs at the reference time. The API re-runs detection live from auth_logs.json; this file records detection history.",
+  "detection_runs": [
+    {
+      "organization_id": "org-001",
+      "run_at": "2026-11-06T18:00:00Z",
+      "analysis_start": "2026-08-08T18:00:00Z",
+      "analysis_end": "2026-11-06T18:00:00Z",
+      "anomaly_count": 9
+    },
+    {
+      "organization_id": "org-002",
+      "run_at": "2026-11-06T18:00:00Z",
+      "analysis_start": "2026-08-08T18:00:00Z",
+      "analysis_end": "2026-11-06T18:00:00Z",
+      "anomaly_count": 0
+    }
+  ],
+  "anomalies": [
+    {
+      "anomaly_id": "A-4638DDA6",
+      "type": "unusual_data_access",
+      "user": "alice.wanjiru",
+      "asset_id": "a-rds-001",
+      "country": "BR",
+      "timestamp": "2026-11-04T23:52:00Z",
+      "detail": "Read 48,500 records, 190x the 90-day average of 256",
+      "organization_id": "org-001",
+      "confidence": "high",
+      "supporting_event_ids": [
+        "EVT-00334"
+      ],
+      "context": {
+        "records_accessed": 48500,
+        "baseline_mean_records": 255.6,
+        "baseline_event_count": 31,
+        "threshold_records": 5000,
+        "multiplier": 5.0
+      }
+    },
+    {
+      "anomaly_id": "A-C403748A",
+      "type": "new_country",
+      "user": "alice.wanjiru",
+      "asset_id": "a-rds-001",
+      "country": "BR",
+      "timestamp": "2026-11-04T23:40:00Z",
+      "detail": "First login from this country in 90 days (Sao Paulo, Brazil; previously seen: KE)",
+      "organization_id": "org-001",
+      "confidence": "medium",
+      "supporting_event_ids": [
+        "EVT-00333"
+      ],
+      "context": {
+        "baseline_days": 90,
+        "baseline_event_count": 31,
+        "baseline_countries": [
+          "KE"
+        ],
+        "source_ip": "203.0.113.77",
+        "action": "console_login"
+      }
+    },
+    {
+      "anomaly_id": "A-D8E96F1B",
+      "type": "excessive_failed_logins",
+      "user": "ops-admin",
+      "asset_id": "a-iam-001",
+      "country": "NL",
+      "timestamp": "2026-11-03T02:17:49Z",
+      "detail": "8 failed logins from 203.0.113.45 in 8 minutes; no successful login followed",
+      "organization_id": "org-001",
+      "confidence": "high",
+      "supporting_event_ids": [
+        "EVT-00317",
+        "EVT-00318",
+        "EVT-00319",
+        "EVT-00320",
+        "EVT-00321",
+        "EVT-00322",
+        "EVT-00323",
+        "EVT-00324"
+      ],
+      "context": {
+        "source_ip": "203.0.113.45",
+        "failed_attempts": 8,
+        "window_minutes": 15,
+        "threshold": 5,
+        "targeted_usernames": [
+          "ops-admin"
+        ],
+        "first_attempt": "2026-11-03T02:10:00Z",
+        "successful_login_followed": false
+      }
+    },
+    {
+      "anomaly_id": "A-AAD0E65B",
+      "type": "off_hours_admin",
+      "user": "ops-admin",
+      "asset_id": "a-iam-001",
+      "country": "KE",
+      "timestamp": "2026-10-31T22:40:00Z",
+      "detail": "Privileged console_login, create_access_key at 01:40 local time on Sunday",
+      "organization_id": "org-001",
+      "confidence": "medium",
+      "supporting_event_ids": [
+        "EVT-00311",
+        "EVT-00312"
+      ],
+      "context": {
+        "local_date": "2026-11-01",
+        "local_time": "01:40",
+        "timezone": "Africa/Nairobi",
+        "working_hours": "08:00-18:00 Mon-Fri",
+        "actions": [
+          "console_login",
+          "create_access_key"
+        ],
+        "event_count": 2
+      }
+    },
+    {
+      "anomaly_id": "A-D4A01673",
+      "type": "impossible_travel",
+      "user": "carol.mendes",
+      "asset_id": "a-s3-003",
+      "country": "GB",
+      "timestamp": "2026-10-29T08:05:00Z",
+      "detail": "Login from Nairobi and London 115 minutes apart (6,821 km)",
+      "organization_id": "org-001",
+      "confidence": "high",
+      "supporting_event_ids": [
+        "EVT-00302",
+        "EVT-00303"
+      ],
+      "context": {
+        "from_location": "Nairobi, Kenya",
+        "to_location": "London, United Kingdom",
+        "distance_km": 6820.5,
+        "interval_hours": 1.92,
+        "implied_speed_kmh": 3558.5,
+        "max_plausible_speed_kmh": 900
+      }
+    },
+    {
+      "anomaly_id": "A-56B5A42A",
+      "type": "excessive_failed_logins",
+      "user": "admin, deploy, ec2-user, git, oracle, postgres, root, test, ubuntu",
+      "asset_id": "a-ec2-001",
+      "country": "SG",
+      "timestamp": "2026-10-25T23:11:19Z",
+      "detail": "14 failed logins from 203.0.113.88 in 9 minutes; no successful login followed",
+      "organization_id": "org-001",
+      "confidence": "high",
+      "supporting_event_ids": [
+        "EVT-00282",
+        "EVT-00283",
+        "EVT-00284",
+        "EVT-00285",
+        "EVT-00286",
+        "EVT-00287",
+        "EVT-00288",
+        "EVT-00289",
+        "EVT-00290",
+        "EVT-00291",
+        "EVT-00292",
+        "EVT-00293",
+        "EVT-00294",
+        "EVT-00295"
+      ],
+      "context": {
+        "source_ip": "203.0.113.88",
+        "failed_attempts": 14,
+        "window_minutes": 15,
+        "threshold": 5,
+        "targeted_usernames": [
+          "admin",
+          "deploy",
+          "ec2-user",
+          "git",
+          "oracle",
+          "postgres",
+          "root",
+          "test",
+          "ubuntu"
+        ],
+        "first_attempt": "2026-10-25T23:02:00Z",
+        "successful_login_followed": false
+      }
+    },
+    {
+      "anomaly_id": "A-26573382",
+      "type": "off_hours_admin",
+      "user": "david.kim",
+      "asset_id": "a-iam-005",
+      "country": "KE",
+      "timestamp": "2026-10-25T19:30:00Z",
+      "detail": "Privileged console_login at 22:30 local time on Sunday",
+      "organization_id": "org-001",
+      "confidence": "medium",
+      "supporting_event_ids": [
+        "EVT-00280"
+      ],
+      "context": {
+        "local_date": "2026-10-25",
+        "local_time": "22:30",
+        "timezone": "Africa/Nairobi",
+        "working_hours": "08:00-18:00 Mon-Fri",
+        "actions": [
+          "console_login"
+        ],
+        "event_count": 1
+      }
+    },
+    {
+      "anomaly_id": "A-78D91ACF",
+      "type": "excessive_failed_logins",
+      "user": "admin, pi, root, ubuntu, user",
+      "asset_id": "a-ec2-001",
+      "country": "NL",
+      "timestamp": "2026-09-20T03:25:00Z",
+      "detail": "9 failed logins from 203.0.113.150 in 10 minutes; no successful login followed",
+      "organization_id": "org-001",
+      "confidence": "high",
+      "supporting_event_ids": [
+        "EVT-00183",
+        "EVT-00184",
+        "EVT-00185",
+        "EVT-00186",
+        "EVT-00187",
+        "EVT-00188",
+        "EVT-00189",
+        "EVT-00190",
+        "EVT-00191"
+      ],
+      "context": {
+        "source_ip": "203.0.113.150",
+        "failed_attempts": 9,
+        "window_minutes": 15,
+        "threshold": 5,
+        "targeted_usernames": [
+          "admin",
+          "pi",
+          "root",
+          "ubuntu",
+          "user"
+        ],
+        "first_attempt": "2026-09-20T03:15:00Z",
+        "successful_login_followed": false
+      }
+    },
+    {
+      "anomaly_id": "A-DD3A3840",
+      "type": "off_hours_admin",
+      "user": "ops-admin",
+      "asset_id": "a-iam-001",
+      "country": "KE",
+      "timestamp": "2026-09-19T21:15:00Z",
+      "detail": "Privileged attach_policy at 00:15 local time on Sunday",
+      "organization_id": "org-001",
+      "confidence": "medium",
+      "supporting_event_ids": [
+        "EVT-00181"
+      ],
+      "context": {
+        "local_date": "2026-09-20",
+        "local_time": "00:15",
+        "timezone": "Africa/Nairobi",
+        "working_hours": "08:00-18:00 Mon-Fri",
+        "actions": [
+          "attach_policy"
+        ],
+        "event_count": 1
+      }
+    }
+  ]
+}

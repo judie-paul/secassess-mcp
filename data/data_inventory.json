@@ -1,0 +1,153 @@
+[
+  {
+    "asset_id": "a-s3-001",
+    "organization_id": "org-001",
+    "data_classification": "Restricted - regulated",
+    "data_categories": [
+      "national_id_scans",
+      "payslips",
+      "selfies"
+    ],
+    "contains_pii": true,
+    "contains_financial_data": true,
+    "record_count": 412000,
+    "record_count_note": null,
+    "storage_location": "s3://srf-customer-kyc-documents (af-south-1)"
+  },
+  {
+    "asset_id": "a-s3-002",
+    "organization_id": "org-001",
+    "data_classification": "Public",
+    "data_categories": [
+      "website_images",
+      "brochures"
+    ],
+    "contains_pii": false,
+    "contains_financial_data": false,
+    "record_count": 1850,
+    "record_count_note": null,
+    "storage_location": "s3://srf-marketing-website (af-south-1)"
+  },
+  {
+    "asset_id": "a-s3-003",
+    "organization_id": "org-001",
+    "data_classification": "Confidential",
+    "data_categories": [
+      "management_accounts",
+      "loan_book_exports"
+    ],
+    "contains_pii": false,
+    "contains_financial_data": true,
+    "record_count": null,
+    "record_count_note": "Archive has never been inventoried",
+    "storage_location": "s3://srf-finance-reports-archive (af-south-1)"
+  },
+  {
+    "asset_id": "a-s3-004",
+    "organization_id": "org-001",
+    "data_classification": "Internal",
+    "data_categories": [
+      "application_logs"
+    ],
+    "contains_pii": false,
+    "contains_financial_data": false,
+    "record_count": 2400000,
+    "record_count_note": null,
+    "storage_location": "s3://srf-application-logs (af-south-1)"
+  },
+  {
+    "asset_id": "a-s3-005",
+    "organization_id": "org-001",
+    "data_classification": "Confidential",
+    "data_categories": [
+      "audit_logs"
+    ],
+    "contains_pii": false,
+    "contains_financial_data": false,
+    "record_count": 1100000,
+    "record_count_note": null,
+    "storage_location": "s3://srf-cloudtrail-logs (af-south-1)"
+  },
+  {
+    "asset_id": "a-ec2-003",
+    "organization_id": "org-001",
+    "data_classification": "Confidential",
+    "data_categories": [
+      "credit_scores_temp"
+    ],
+    "contains_pii": true,
+    "contains_financial_data": false,
+    "record_count": 15000,
+    "record_count_note": null,
+    "storage_location": "EBS vol-0batch0001 (af-south-1)"
+  },
+  {
+    "asset_id": "a-ec2-004",
+    "organization_id": "org-001",
+    "data_classification": "Confidential",
+    "data_categories": [
+      "ledger_extracts"
+    ],
+    "contains_pii": true,
+    "contains_financial_data": true,
+    "record_count": null,
+    "record_count_note": "Unknown: server was not in the asset register",
+    "storage_location": "EBS vol-0legacy001 (af-south-1)"
+  },
+  {
+    "asset_id": "a-rds-001",
+    "organization_id": "org-001",
+    "data_classification": "Restricted - regulated",
+    "data_categories": [
+      "customer_profiles",
+      "contact_details",
+      "loan_balances"
+    ],
+    "contains_pii": true,
+    "contains_financial_data": true,
+    "record_count": 1284000,
+    "record_count_note": null,
+    "storage_location": "RDS srf-customer-db (af-south-1)"
+  },
+  {
+    "asset_id": "a-rds-002",
+    "organization_id": "org-001",
+    "data_classification": "Restricted - regulated",
+    "data_categories": [
+      "disbursements",
+      "repayments"
+    ],
+    "contains_pii": true,
+    "contains_financial_data": true,
+    "record_count": 3412000,
+    "record_count_note": null,
+    "storage_location": "RDS srf-payments-ledger (af-south-1)"
+  },
+  {
+    "asset_id": "a-rds-003",
+    "organization_id": "org-001",
+    "data_classification": "Restricted - regulated",
+    "data_categories": [
+      "customer_profiles"
+    ],
+    "contains_pii": true,
+    "contains_financial_data": false,
+    "record_count": null,
+    "record_count_note": "Replica refreshed ad hoc; row count not tracked",
+    "storage_location": "RDS srf-analytics-replica (af-south-1)"
+  },
+  {
+    "asset_id": "b-s3-001",
+    "organization_id": "org-002",
+    "data_classification": "Restricted - regulated",
+    "data_categories": [
+      "member_ids",
+      "payout_numbers"
+    ],
+    "contains_pii": true,
+    "contains_financial_data": true,
+    "record_count": 8400,
+    "record_count_note": null,
+    "storage_location": "s3://kilima-member-records (af-south-1)"
+  }
+]

@@ -1,0 +1,616 @@
+[
+  {
+    "asset_id": "a-s3-001",
+    "organization_id": "org-001",
+    "name": "srf-customer-kyc-documents",
+    "asset_type": "s3_bucket",
+    "service": "S3",
+    "region": "af-south-1",
+    "environment": "production",
+    "exposure": "public",
+    "data_sensitivity": "pii",
+    "business_criticality": "critical",
+    "owner": "onboarding-team",
+    "description": "Scanned national ID cards, payslips and selfies collected during loan onboarding.",
+    "discovered_at": "2025-09-22T07:30:00Z",
+    "security_controls": {
+      "encryption_at_rest": false,
+      "encryption_in_transit": true,
+      "logging_enabled": false,
+      "network_restricted": false,
+      "backup_enabled": true
+    },
+    "tags": [
+      "kyc",
+      "customer-data"
+    ]
+  },
+  {
+    "asset_id": "a-s3-002",
+    "organization_id": "org-001",
+    "name": "srf-marketing-website",
+    "asset_type": "s3_bucket",
+    "service": "S3",
+    "region": "af-south-1",
+    "environment": "production",
+    "exposure": "public",
+    "data_sensitivity": "public",
+    "business_criticality": "low",
+    "owner": "marketing",
+    "description": "Static assets for the public marketing website (intentionally public).",
+    "discovered_at": "2025-10-22T07:30:00Z",
+    "security_controls": {
+      "encryption_at_rest": true,
+      "encryption_in_transit": true,
+      "logging_enabled": true,
+      "backup_enabled": false
+    },
+    "tags": [
+      "website"
+    ]
+  },
+  {
+    "asset_id": "a-s3-003",
+    "organization_id": "org-001",
+    "name": "srf-finance-reports-archive",
+    "asset_type": "s3_bucket",
+    "service": "S3",
+    "region": "af-south-1",
+    "environment": "production",
+    "exposure": "internal",
+    "data_sensitivity": "financial",
+    "business_criticality": "high",
+    "owner": "finance",
+    "description": "Monthly management accounts, loan book exports and audit working papers.",
+    "discovered_at": "2025-11-21T07:30:00Z",
+    "security_controls": {
+      "encryption_at_rest": false,
+      "encryption_in_transit": true,
+      "logging_enabled": true,
+      "least_privilege": false,
+      "backup_enabled": true
+    },
+    "tags": [
+      "finance"
+    ]
+  },
+  {
+    "asset_id": "a-s3-004",
+    "organization_id": "org-001",
+    "name": "srf-application-logs",
+    "asset_type": "s3_bucket",
+    "service": "S3",
+    "region": "af-south-1",
+    "environment": "production",
+    "exposure": "internal",
+    "data_sensitivity": "internal",
+    "business_criticality": "medium",
+    "owner": "platform",
+    "description": "Application and load balancer logs.",
+    "discovered_at": "2025-12-11T07:30:00Z",
+    "security_controls": {
+      "encryption_at_rest": true,
+      "encryption_in_transit": true,
+      "logging_enabled": true,
+      "least_privilege": true
+    },
+    "tags": [
+      "logs"
+    ]
+  },
+  {
+    "asset_id": "a-s3-005",
+    "organization_id": "org-001",
+    "name": "srf-cloudtrail-logs",
+    "asset_type": "s3_bucket",
+    "service": "S3",
+    "region": "af-south-1",
+    "environment": "production",
+    "exposure": "internal",
+    "data_sensitivity": "internal",
+    "business_criticality": "high",
+    "owner": "security",
+    "description": "Organization CloudTrail log archive (object lock enabled).",
+    "discovered_at": "2025-10-02T07:30:00Z",
+    "security_controls": {
+      "encryption_at_rest": true,
+      "encryption_in_transit": true,
+      "logging_enabled": true,
+      "least_privilege": true,
+      "network_restricted": true,
+      "key_rotation": true
+    },
+    "tags": [
+      "audit"
+    ]
+  },
+  {
+    "asset_id": "a-iam-001",
+    "organization_id": "org-001",
+    "name": "ops-admin",
+    "asset_type": "iam_user",
+    "service": "IAM",
+    "region": "global",
+    "environment": "production",
+    "exposure": "public",
+    "data_sensitivity": "internal",
+    "business_criticality": "critical",
+    "owner": "platform",
+    "description": "Legacy shared administrator IAM user with console password (AdministratorAccess).",
+    "discovered_at": "2025-09-12T07:30:00Z",
+    "security_controls": {
+      "mfa_enforced": false,
+      "least_privilege": false,
+      "key_rotation": false,
+      "logging_enabled": true
+    },
+    "tags": [
+      "privileged",
+      "legacy"
+    ]
+  },
+  {
+    "asset_id": "a-iam-002",
+    "organization_id": "org-001",
+    "name": "ci-deploy-role",
+    "asset_type": "iam_role",
+    "service": "IAM",
+    "region": "global",
+    "environment": "production",
+    "exposure": "internal",
+    "data_sensitivity": "internal",
+    "business_criticality": "high",
+    "owner": "platform",
+    "description": "Role assumed by the CI pipeline to deploy workloads.",
+    "discovered_at": "2026-01-10T07:30:00Z",
+    "security_controls": {
+      "least_privilege": false,
+      "logging_enabled": true
+    },
+    "tags": [
+      "ci",
+      "privileged"
+    ]
+  },
+  {
+    "asset_id": "a-iam-003",
+    "organization_id": "org-001",
+    "name": "svc-payments",
+    "asset_type": "iam_user",
+    "service": "IAM",
+    "region": "global",
+    "environment": "production",
+    "exposure": "internal",
+    "data_sensitivity": "financial",
+    "business_criticality": "critical",
+    "owner": "payments",
+    "description": "Programmatic IAM user used by the payments integration.",
+    "discovered_at": "2025-09-17T07:30:00Z",
+    "security_controls": {
+      "key_rotation": false,
+      "least_privilege": true,
+      "logging_enabled": true
+    },
+    "tags": [
+      "service-account"
+    ]
+  },
+  {
+    "asset_id": "a-iam-004",
+    "organization_id": "org-001",
+    "name": "security-audit-role",
+    "asset_type": "iam_role",
+    "service": "IAM",
+    "region": "global",
+    "environment": "production",
+    "exposure": "internal",
+    "data_sensitivity": "internal",
+    "business_criticality": "medium",
+    "owner": "security",
+    "description": "Read-only role used by the security team for audits.",
+    "discovered_at": "2026-02-19T07:30:00Z",
+    "security_controls": {
+      "mfa_enforced": true,
+      "least_privilege": true,
+      "logging_enabled": true
+    },
+    "tags": [
+      "audit"
+    ]
+  },
+  {
+    "asset_id": "a-iam-005",
+    "organization_id": "org-001",
+    "name": "platform-admin-sso",
+    "asset_type": "sso_permission_set",
+    "service": "IAM",
+    "region": "global",
+    "environment": "production",
+    "exposure": "internal",
+    "data_sensitivity": "internal",
+    "business_criticality": "critical",
+    "owner": "platform",
+    "description": "IAM Identity Center permission set for platform administrators (MFA enforced).",
+    "discovered_at": "2026-04-20T07:30:00Z",
+    "security_controls": {
+      "mfa_enforced": true,
+      "least_privilege": true,
+      "logging_enabled": true
+    },
+    "tags": [
+      "privileged",
+      "sso"
+    ]
+  },
+  {
+    "asset_id": "a-ec2-001",
+    "organization_id": "org-001",
+    "name": "bastion-01",
+    "asset_type": "ec2_instance",
+    "service": "EC2",
+    "region": "af-south-1",
+    "environment": "production",
+    "exposure": "public",
+    "data_sensitivity": "internal",
+    "business_criticality": "high",
+    "owner": "platform",
+    "description": "SSH bastion host for production access.",
+    "discovered_at": "2025-10-12T07:30:00Z",
+    "security_controls": {
+      "encryption_at_rest": true,
+      "network_restricted": false,
+      "mfa_enforced": false,
+      "logging_enabled": true
+    },
+    "tags": [
+      "bastion"
+    ]
+  },
+  {
+    "asset_id": "a-ec2-002",
+    "organization_id": "org-001",
+    "name": "web-frontend-01",
+    "asset_type": "ec2_instance",
+    "service": "EC2",
+    "region": "af-south-1",
+    "environment": "production",
+    "exposure": "public",
+    "data_sensitivity": "internal",
+    "business_criticality": "high",
+    "owner": "web-team",
+    "description": "Customer-facing web front end behind HTTPS only.",
+    "discovered_at": "2025-11-11T07:30:00Z",
+    "security_controls": {
+      "encryption_at_rest": true,
+      "network_restricted": true,
+      "logging_enabled": true,
+      "backup_enabled": true
+    },
+    "tags": [
+      "web"
+    ]
+  },
+  {
+    "asset_id": "a-ec2-003",
+    "organization_id": "org-001",
+    "name": "batch-worker-01",
+    "asset_type": "ec2_instance",
+    "service": "EC2",
+    "region": "af-south-1",
+    "environment": "production",
+    "exposure": "internal",
+    "data_sensitivity": "internal",
+    "business_criticality": "medium",
+    "owner": "data-team",
+    "description": "Private subnet worker that runs credit scoring batch jobs.",
+    "discovered_at": "2026-01-30T07:30:00Z",
+    "security_controls": {
+      "encryption_at_rest": true,
+      "network_restricted": true,
+      "logging_enabled": true,
+      "least_privilege": true
+    },
+    "tags": [
+      "batch"
+    ]
+  },
+  {
+    "asset_id": "a-ec2-004",
+    "organization_id": "org-001",
+    "name": "legacy-reporting-01",
+    "asset_type": "ec2_instance",
+    "service": "EC2",
+    "region": "af-south-1",
+    "environment": "production",
+    "exposure": "public",
+    "data_sensitivity": "financial",
+    "business_criticality": "medium",
+    "owner": "finance",
+    "description": "Forgotten Windows Server 2012 reporting box holding ledger extracts.",
+    "discovered_at": "2026-09-07T07:30:00Z",
+    "security_controls": {
+      "encryption_at_rest": false,
+      "network_restricted": false,
+      "logging_enabled": false,
+      "backup_enabled": false
+    },
+    "tags": [
+      "legacy",
+      "shadow-it"
+    ]
+  },
+  {
+    "asset_id": "a-rds-001",
+    "organization_id": "org-001",
+    "name": "srf-customer-db",
+    "asset_type": "rds_instance",
+    "service": "RDS",
+    "region": "af-south-1",
+    "environment": "production",
+    "exposure": "public",
+    "data_sensitivity": "pii",
+    "business_criticality": "critical",
+    "owner": "core-banking",
+    "description": "PostgreSQL database with customer profiles, contact details and loan balances.",
+    "discovered_at": "2025-09-12T07:30:00Z",
+    "security_controls": {
+      "encryption_at_rest": true,
+      "encryption_in_transit": true,
+      "network_restricted": false,
+      "backup_enabled": true,
+      "logging_enabled": true
+    },
+    "tags": [
+      "customer-data"
+    ]
+  },
+  {
+    "asset_id": "a-rds-002",
+    "organization_id": "org-001",
+    "name": "srf-payments-ledger",
+    "asset_type": "rds_instance",
+    "service": "RDS",
+    "region": "af-south-1",
+    "environment": "production",
+    "exposure": "internal",
+    "data_sensitivity": "financial",
+    "business_criticality": "critical",
+    "owner": "payments",
+    "description": "Payments ledger (disbursements and repayments).",
+    "discovered_at": "2025-09-12T07:30:00Z",
+    "security_controls": {
+      "encryption_at_rest": true,
+      "encryption_in_transit": true,
+      "network_restricted": true,
+      "backup_enabled": true,
+      "logging_enabled": true,
+      "key_rotation": true
+    },
+    "tags": [
+      "payments"
+    ]
+  },
+  {
+    "asset_id": "a-rds-003",
+    "organization_id": "org-001",
+    "name": "srf-analytics-replica",
+    "asset_type": "rds_instance",
+    "service": "RDS",
+    "region": "af-south-1",
+    "environment": "staging",
+    "exposure": "internal",
+    "data_sensitivity": "pii",
+    "business_criticality": "medium",
+    "owner": "data-team",
+    "description": "Staging analytics copy of the customer database, refreshed ad hoc.",
+    "discovered_at": "2026-06-09T07:30:00Z",
+    "security_controls": {
+      "encryption_at_rest": false,
+      "backup_enabled": false,
+      "network_restricted": true
+    },
+    "tags": [
+      "analytics"
+    ]
+  },
+  {
+    "asset_id": "a-kms-001",
+    "organization_id": "org-001",
+    "name": "customer-data-key",
+    "asset_type": "kms_key",
+    "service": "KMS",
+    "region": "af-south-1",
+    "environment": "production",
+    "exposure": "internal",
+    "data_sensitivity": "internal",
+    "business_criticality": "critical",
+    "owner": "security",
+    "description": "Customer-managed key protecting customer data stores.",
+    "discovered_at": "2025-10-02T07:30:00Z",
+    "security_controls": {
+      "key_rotation": false,
+      "least_privilege": false,
+      "logging_enabled": true
+    },
+    "tags": [
+      "encryption"
+    ]
+  },
+  {
+    "asset_id": "a-kms-002",
+    "organization_id": "org-001",
+    "name": "payments-key",
+    "asset_type": "kms_key",
+    "service": "KMS",
+    "region": "af-south-1",
+    "environment": "production",
+    "exposure": "internal",
+    "data_sensitivity": "internal",
+    "business_criticality": "critical",
+    "owner": "security",
+    "description": "Customer-managed key for the payments ledger.",
+    "discovered_at": "2025-10-02T07:30:00Z",
+    "security_controls": {
+      "key_rotation": true,
+      "least_privilege": true,
+      "logging_enabled": true
+    },
+    "tags": [
+      "encryption",
+      "payments"
+    ]
+  },
+  {
+    "asset_id": "a-lambda-001",
+    "organization_id": "org-001",
+    "name": "payment-webhook-handler",
+    "asset_type": "lambda_function",
+    "service": "Lambda",
+    "region": "af-south-1",
+    "environment": "production",
+    "exposure": "public",
+    "data_sensitivity": "financial",
+    "business_criticality": "high",
+    "owner": "payments",
+    "description": "Receives mobile-money payment callbacks via a function URL.",
+    "discovered_at": "2026-03-11T07:30:00Z",
+    "security_controls": {
+      "network_restricted": false,
+      "least_privilege": false,
+      "logging_enabled": true,
+      "encryption_in_transit": true
+    },
+    "tags": [
+      "payments",
+      "webhook"
+    ]
+  },
+  {
+    "asset_id": "a-lambda-002",
+    "organization_id": "org-001",
+    "name": "nightly-report-generator",
+    "asset_type": "lambda_function",
+    "service": "Lambda",
+    "region": "af-south-1",
+    "environment": "production",
+    "exposure": "internal",
+    "data_sensitivity": "financial",
+    "business_criticality": "medium",
+    "owner": "finance",
+    "description": "Builds nightly finance reports into the finance archive bucket.",
+    "discovered_at": "2026-03-21T07:30:00Z",
+    "security_controls": {
+      "least_privilege": false,
+      "logging_enabled": true
+    },
+    "tags": [
+      "reporting"
+    ]
+  },
+  {
+    "asset_id": "a-ct-001",
+    "organization_id": "org-001",
+    "name": "srf-org-trail",
+    "asset_type": "cloudtrail_trail",
+    "service": "CloudTrail",
+    "region": "global",
+    "environment": "production",
+    "exposure": "internal",
+    "data_sensitivity": "internal",
+    "business_criticality": "high",
+    "owner": "security",
+    "description": "Organization-wide multi-region trail.",
+    "discovered_at": "2025-10-02T07:30:00Z",
+    "security_controls": {
+      "logging_enabled": true,
+      "encryption_at_rest": true
+    },
+    "tags": [
+      "audit"
+    ]
+  },
+  {
+    "asset_id": "a-ct-002",
+    "organization_id": "org-001",
+    "name": "srf-eu-west-1-trail",
+    "asset_type": "cloudtrail_trail",
+    "service": "CloudTrail",
+    "region": "eu-west-1",
+    "environment": "production",
+    "exposure": "internal",
+    "data_sensitivity": "internal",
+    "business_criticality": "high",
+    "owner": "security",
+    "description": "Regional trail for eu-west-1 where the payments integration runs.",
+    "discovered_at": "2025-10-22T07:30:00Z",
+    "security_controls": {
+      "logging_enabled": false,
+      "encryption_at_rest": true
+    },
+    "tags": [
+      "audit"
+    ]
+  },
+  {
+    "asset_id": "b-s3-001",
+    "organization_id": "org-002",
+    "name": "kilima-member-records",
+    "asset_type": "s3_bucket",
+    "service": "S3",
+    "region": "af-south-1",
+    "environment": "production",
+    "exposure": "internal",
+    "data_sensitivity": "pii",
+    "business_criticality": "high",
+    "owner": "office",
+    "description": "Member farmer registration forms and payout details.",
+    "discovered_at": "2026-04-20T07:30:00Z",
+    "security_controls": {
+      "encryption_at_rest": false,
+      "logging_enabled": false
+    },
+    "tags": [
+      "members"
+    ]
+  },
+  {
+    "asset_id": "b-iam-001",
+    "organization_id": "org-002",
+    "name": "kilima-admin",
+    "asset_type": "iam_user",
+    "service": "IAM",
+    "region": "global",
+    "environment": "production",
+    "exposure": "public",
+    "data_sensitivity": "internal",
+    "business_criticality": "high",
+    "owner": "office",
+    "description": "Single administrator IAM user.",
+    "discovered_at": "2026-04-20T07:30:00Z",
+    "security_controls": {
+      "mfa_enforced": false,
+      "logging_enabled": true
+    },
+    "tags": []
+  },
+  {
+    "asset_id": "b-ec2-001",
+    "organization_id": "org-002",
+    "name": "kilima-website",
+    "asset_type": "ec2_instance",
+    "service": "EC2",
+    "region": "af-south-1",
+    "environment": "production",
+    "exposure": "public",
+    "data_sensitivity": "public",
+    "business_criticality": "low",
+    "owner": "office",
+    "description": "WordPress website for the cooperative.",
+    "discovered_at": "2026-04-20T07:30:00Z",
+    "security_controls": {
+      "network_restricted": true,
+      "logging_enabled": true
+    },
+    "tags": []
+  }
+]
