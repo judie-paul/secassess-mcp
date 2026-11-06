@@ -20,8 +20,8 @@ assessment report.
 Claude / ChatGPT / Codex
         │  natural-language question
         ▼
-   MCP server  ── tools: top_risks, list_findings, get_asset, get_data_inventory,
-        │                query_auth_logs, detect_anomalies, generate_report
+   MCP server  ── tools: get_organization_summary, top_risks, list_findings, get_asset,
+        │                get_data_inventory, query_auth_logs, detect_anomalies, generate_report
         ▼
    REST API (FastAPI)  ── stands in for the security platform's API
         │
