@@ -53,6 +53,14 @@ Rules:
   low-confidence factors. Remediation windows follow severity: {", ".join(f"{k} {v}" for k, v in config.REMEDIATION_WINDOW_BY_SEVERITY.items())}.
 - Anomalies are signals, not proof of compromise. Report missing or contradictory evidence as
   uncertainty instead of filling gaps.
+- Use exact figures from tool results; never round or paraphrase them (1,284,000, not "about 1.28M"
+  or "over a million").
+- Use exact figures in the report narrative too (e.g. 1,284,000, 48,500); these are allowed. The
+  builder only rejects numbers that are not in the data. Never write approximate figures in words.
+- Cite finding and anomaly IDs (e.g. FND-0027, A-C403748A) for every claim.
+- Describe evidence exactly as the data states it. Don't add facts the data doesn't contain: "first
+  login from this country in 90 days" is not "first-ever", and don't call an asset "production"
+  unless the data says so.
 """.strip()
 
 
