@@ -74,6 +74,38 @@ def _fit(text: str, limit: int) -> str:
     return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
 
 
+def _lines_needed(text: str, width_in: float, size: int) -> int:
+    """Conservative estimate of wrapped lines for body text at this size."""
+    per_line = max(1, int(width_in * 72 / (size * 0.52)))
+    lines = 0
+    for para in text.split("\n"):
+        words, line_len, n = para.split(), 0, 1
+        for word in words:
+            add = len(word) + (1 if line_len else 0)
+            if line_len + add > per_line:
+                n += 1
+                line_len = len(word)
+            else:
+                line_len += add
+        lines += n
+    return lines
+
+
+def _fit_font(text: str, width_in: float, height_in: float, sizes=(14, 13, 12, 11, 10),
+              truncate: bool = False) -> tuple[int, str]:
+    """Largest font size at which `text` fits the box. With truncate=True, text that
+    does not fit even at the smallest size is shortened with an ellipsis."""
+    for size in sizes:
+        if _lines_needed(text, width_in, size) * size * 1.2 / 72 <= height_in:
+            return size, text
+    size = sizes[-1]
+    if truncate:
+        while len(text) > 20 and _lines_needed(text + "…", width_in, size) * size * 1.2 / 72 > height_in:
+            text = text[: text.rstrip().rfind(" ")].rstrip(" ,;:")
+        text += "…"
+    return size, text
+
+
 def check_risk_text(data: dict, strict_numbers: bool = True) -> None:
     """AI-written business_impact / remediation must not contain invented numbers."""
     if not strict_numbers:
@@ -347,7 +379,7 @@ def slide_top_risk(prs, data, m, r, page):
 
     # middle: evidence
     x = 4.65
-    w = 4.3
+    w = 3.95
     add_text(s, x, 1.75, w, 0.35, "Evidence", size=15, bold=True, color=COLORS["ink"])
     for j, ev in enumerate(r["evidence"][:4]):
         yy = 2.25 + j * 1.1
@@ -356,19 +388,24 @@ def slide_top_risk(prs, data, m, r, page):
                    ("   " + ev["ref"], {"color": COLORS["muted"]})]], size=11)
         add_text(s, x, yy + 0.3, w, 0.7, ev["detail"], size=14, shrink=True)
 
-    # right: impact and fix
-    x = 9.25
+    # right: impact and fix (AI-written text, so font size adapts to its length)
+    x = 8.85
     w = 13.333 - MARGIN - x
-    add_box(s, x, 1.75, w, 2.35, fill=COLORS["tint"], radius=0.12)
-    add_text(s, x + 0.25, 1.95, w - 0.5, 0.35, "Business impact", size=15, bold=True, color=COLORS["ink"])
-    add_text(s, x + 0.25, 2.35, w - 0.5, 1.6, r["business_impact"] or "Not yet described.", size=14,
-             shrink=True, color=None if r["business_impact"] else COLORS["muted"])
-    add_box(s, x, 4.3, w, 2.4, fill=COLORS["accent_soft"], radius=0.12)
-    add_text(s, x + 0.25, 4.5, w - 0.5, 0.35, "Recommended fix", size=15, bold=True, color=COLORS["ink"])
-    add_text(s, x + 0.25, 4.9, w - 0.5, 1.25, r["remediation"] or "Not yet described.", size=14,
-             shrink=True, color=None if r["remediation"] else COLORS["muted"])
-    add_text(s, x + 0.25, 6.2, w - 0.5, 0.35, "Complete within " + window_label(r["remediation_window"]),
+    tw = w - 0.5
+    impact = r["business_impact"] or "Not yet described."
+    add_box(s, x, 1.75, w, 2.4, fill=COLORS["tint"], radius=0.12)
+    add_text(s, x + 0.25, 1.93, tw, 0.35, "Business impact", size=15, bold=True, color=COLORS["ink"])
+    size, impact = _fit_font(impact, tw, 1.7)
+    add_text(s, x + 0.25, 2.33, tw, 1.7, impact, size=size, name="risk_business_impact",
+             color=None if r["business_impact"] else COLORS["muted"])
+    fix = r["remediation"] or "Not yet described."
+    add_box(s, x, 4.3, w, 2.45, fill=COLORS["accent_soft"], radius=0.12)
+    add_text(s, x + 0.25, 4.48, tw, 0.35, "Recommended fix", size=15, bold=True, color=COLORS["ink"])
+    add_text(s, x + 0.25, 4.83, tw, 0.3, "Complete within " + window_label(r["remediation_window"]),
              size=13, bold=True, color=COLORS["accent"])
+    size, fix = _fit_font(fix, tw, 1.42)
+    add_text(s, x + 0.25, 5.2, tw, 1.42, fix, size=size, name="risk_remediation",
+             color=None if r["remediation"] else COLORS["muted"])
     refs = ", ".join(f"{e['source']}:{e['ref']}" for e in r["evidence"])
     _finish(s, data, page, f"Evidence references: {refs}")
 
@@ -449,8 +486,9 @@ def slide_roadmap(prs, data, m):
                      SEVERITY[r["severity"]], size=10)
             add_text(s, cx + 0.2, y + 0.5, cw - 0.4, 0.45, r["title"], size=13, bold=True,
                      shrink=True)
-            add_text(s, cx + 0.2, y + 0.95, cw - 0.4, 0.58, r["remediation"] or "Not yet described.",
-                     size=11, color=COLORS["muted"], shrink=True)
+            size, fix = _fit_font(r["remediation"] or "Not yet described.", cw - 0.4, 0.58,
+                                  sizes=(11, 10), truncate=True)
+            add_text(s, cx + 0.2, y + 0.95, cw - 0.4, 0.58, fix, size=size, color=COLORS["muted"])
         if len(risks) > 3:
             cx = area_x + 2 * (cw + 0.2)
             add_box(s, cx, y, cw, lane_h, fill=COLORS["tint"], radius=0.12)

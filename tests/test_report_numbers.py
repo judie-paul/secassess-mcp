@@ -145,3 +145,18 @@ def test_acronyms_keep_their_case():
     assert lower_first("RDS instance publicly accessible") == "RDS instance publicly accessible"
     assert lower_first("S3 bucket allows public read") == "S3 bucket allows public read"
     assert lower_first("Public storage bucket") == "public storage bucket"
+
+
+def test_long_ai_risk_text_fits_without_losing_words(data, tmp_path):
+    long_text = ("Customer records could be copied by anyone who finds the store, leading to regulatory "
+                 "notification, fraud against customers and lasting reputational damage. ") * 3
+    long_text = long_text[:400].rsplit(" ", 1)[0] + "."
+    for r in data["top_risks"]:
+        r["business_impact"] = long_text
+        r["remediation"] = long_text
+    prs = Presentation(build_report(data, None, out_dir=tmp_path))
+    slide = prs.slides[6]
+    for name in ("risk_business_impact", "risk_remediation"):
+        shape = next(s for s in slide.shapes if s.name == name)
+        assert shape.text_frame.text == long_text          # detail slide keeps every word
+        assert shape.text_frame.paragraphs[0].runs[0].font.size.pt >= 10
