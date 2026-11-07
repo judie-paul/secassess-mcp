@@ -52,6 +52,7 @@ engineering problem, not a prompting problem:
   on every slide traces to the data, chart values match exactly, and two runs produce
   identical output.
 - **Charts stay native.** They're real PowerPoint charts, so the client can edit them.
+- **Wording gets a human check.** Numbers are verified automatically; review the wording before sending a report to a client.
 
 ## The report (12 slides)
 

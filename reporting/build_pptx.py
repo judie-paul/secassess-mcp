@@ -410,7 +410,7 @@ def slide_correlation(prs, data, m, narrative):
     add_text(s, x + 0.25, y + 0.75, rw - 0.5, 1.0, format_score(r["score"]), size=54, bold=True,
              font=HEAD_FONT, color=COLORS["white"])
     add_text(s, x + 0.25, y + 1.95, rw - 0.5, 0.9,
-             f"Rank {r['rank']} of {m['top_risk_count']} top risks · {r['asset_id']}",
+             [f"Rank {r['rank']} of {m['top_risk_count']} top risks", r["asset_id"]],
              size=13, color=COLORS["white"])
     add_box(s, MARGIN, 5.15, CONTENT_W, 1.55, fill=COLORS["accent_soft"], radius=0.12)
     add_text(s, MARGIN + 0.3, 5.3, CONTENT_W - 0.6, 1.25, narrative["correlated_story"], size=16,
