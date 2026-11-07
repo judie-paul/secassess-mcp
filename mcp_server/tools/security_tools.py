@@ -165,7 +165,12 @@ def register_tools(server: MCPServer, client: BackendClient) -> None:
         """Highest-priority risks (one per asset), ranked by the backend. `items` are in final-report format
         with business_impact and remediation left null for you to fill in (remediation_window is set);
         `scoring_details` (keyed by risk_id) explains the likelihood and impact factors. All numbers are
-        authoritative: explain them, never recalculate or change them."""
+        authoritative: explain them, never recalculate or change them.
+
+        Reporting rules: quote figures exactly as returned (1,284,000, never "about 1.28M";
+        190x, never "about 190 times"); cite finding and anomaly IDs (e.g. FND-0027,
+        A-C403748A); describe evidence exactly as the data states it ("first login from this
+        country in 90 days" is not "first-ever")."""
         return await call(f"{_org(organization_id)}/risks", {"limit": limit})
 
     @server.tool()
@@ -200,7 +205,12 @@ def register_tools(server: MCPServer, client: BackendClient) -> None:
         """Run anomaly detection over authentication logs (new-country logins, impossible travel, off-hours
         admin activity, excessive failed logins, unusual data access). `items` are in final-report format;
         `evidence` (keyed by anomaly_id) lists confidence and supporting auth event IDs. Results are signals
-        to investigate, not confirmed malicious activity."""
+        to investigate, not confirmed malicious activity.
+
+        Reporting rules: quote figures exactly as returned (1,284,000, never "about 1.28M";
+        190x, never "about 190 times"); cite finding and anomaly IDs (e.g. FND-0027,
+        A-C403748A); describe evidence exactly as the data states it ("first login from this
+        country in 90 days" is not "first-ever")."""
         return await call(
             f"{_org(organization_id)}/anomalies",
             {
@@ -242,7 +252,15 @@ def register_tools(server: MCPServer, client: BackendClient) -> None:
         All charts, tables and figures come from the backend. You control only the narrative
         (executive_summary, key_messages, correlated_story) and, per top risk, business_impact and
         remediation. Any you leave out fall back to plain data-only wording. The builder rejects text
-        containing a number that is not in the data; if that happens, fix the number it names and retry."""
+        containing a number that is not in the data; if that happens, fix the number it names and retry.
+
+        Reporting rules: quote figures exactly as returned (1,284,000, never "about 1.28M";
+        190x, never "about 190 times"); cite finding and anomaly IDs (e.g. FND-0027,
+        A-C403748A); describe evidence exactly as the data states it ("first login from this
+        country in 90 days" is not "first-ever").
+
+        Exact figures from tool results are allowed in all text fields; only numbers that are
+        not in the data are rejected. Never write approximate figures in words."""
         risks = (await call(f"{_org(organization_id)}/risks", {"limit": top_risks_limit}))["items"]
         supplied = {a.risk_id: a for a in (risk_annotations or [])}
         if len(supplied) != len(risk_annotations or []):
